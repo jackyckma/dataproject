@@ -5,7 +5,7 @@
   <!-- Basic Page Needs
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
   <meta charset="utf-8">
-  <title>About</title>
+  <title>Simeple Stock Chart</title>
   <meta name="description" content="">
   <meta name="author" content="">
 
@@ -26,6 +26,13 @@
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
   <link rel="icon" type="image/png" href="{{ url_for('static',filename='images/favicon.png')}}">
 
+  <!-- Bokeh Chart Resource
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+	{% if status.code==1 %}
+	{{ plot.resources|indent(4)|safe }}
+	{{ plot.script|indent(4)|safe }}
+	{% endif %}
+  
 </head>
 <body>
 
@@ -34,12 +41,15 @@
   <div class="container">
     <div class="row">
       <div class="one-half column" style="margin-top: 25%">
-        {% if stockcode %}
-        <h4>{{stockcode}}</h4>
-        {% else %}
-        <h4>No Stockcode provided</h4>
-        {% endif %}
-        <p>To show the chart of a given stockcode</p>
+	    <form action="{{ url_for('stock') }}" method=get>
+			<input type="text" size="30" name="stockcode" value="{{stock.code}}">
+	    </form>
+        <p><b>status:</b> {{status.msg}}</p>
+        
+	{% if status.code==1 %}
+        <p><b>{{stock.code}}</b></p>
+        {{ plot.div|indent(4)|safe }}
+	{% endif %}        
       </div>
     </div>
   </div>
