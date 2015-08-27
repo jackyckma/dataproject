@@ -13,11 +13,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def main():
-	return redirect('/stock/')
-
-@app.route('/index')
-def index():
-	return render_template('index.html')
+	return redirect(url_for('stock'))
 
 @app.route('/about')
 def about():
@@ -26,7 +22,7 @@ def about():
 #Main Process
 @app.route('/stock/')
 def stock():
-	stockcode = str(request.args.get('stockcode'))
+	stockcode = request.args.get('stockcode')
 	stockperiod = str(request.args.get('period'))
 	
 	
