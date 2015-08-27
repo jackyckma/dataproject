@@ -26,6 +26,13 @@
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
   <link rel="icon" type="image/png" href="{{ url_for('static',filename='images/favicon.png')}}">
 
+  <!-- CSS For Bokeh Plot
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+<style>
+	.plotdiv {margin:0px}
+</style>
+
+
   <!-- Bokeh Chart Resource
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
 	{% if status.code==1 %}
@@ -40,17 +47,27 @@
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
   <div class="container">
     <div class="row">
-      <div class="one-half column" style="margin-top: 25%">
+		<h3 style="margin-top:50px">Simple Stock Chart</h2>
+		
 	    <form action="{{ url_for('stock') }}" method=get>
-			<input type="text" size="30" name="stockcode" value="{{stock.code}}">
+			<label>Stockcode</label>
+			<input type="text" size="30" name="stockcode" value="{% if status.code==1 %}{{stock.code}}{% endif %}"/>
+			<select name="period">
+				<option value="1M" {% if stock.period=='1M' %}selected{% endif %}>1M</option>
+				<option value="6M" {% if stock.period=='6M' %}selected{% endif %}>6M</option>
+				<option value="1Y" {% if stock.period=='1Y' %}selected{% endif %}>1Y</option>
+				<option value="All" {% if stock.period=='All' %}selected{% endif %}>All</option>
+			</select>
+			<input class="button-primary" type="submit" value="SHOW CHART"/>
 	    </form>
-        <p><b>status:</b> {{status.msg}}</p>
-        
+
+	{% if status.code>1 %}        
+        <p><b>status:</b> {{status.msg}}</p>	
+	{% endif %}        	
 	{% if status.code==1 %}
-        <p><b>{{stock.code}}</b></p>
         {{ plot.div|indent(4)|safe }}
 	{% endif %}        
-      </div>
+
     </div>
   </div>
 

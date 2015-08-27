@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 import requests
 import pandas as pd
+import datetime
 
 from bokeh.embed import components
 from bokeh.plotting import figure
@@ -12,7 +13,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def main():
-	return redirect('/index')
+	return redirect('/stock/')
 
 @app.route('/index')
 def index():
@@ -25,17 +26,26 @@ def about():
 #Main Process
 @app.route('/stock/')
 def stock():
-	stockcode = request.args.get('stockcode')
+	stockcode = str(request.args.get('stockcode'))
+	stockperiod = str(request.args.get('period'))
+	
 	
 	if stockcode and stockcode.strip():
 		#request data from QuanDL
 		baseURL='https://www.quandl.com/api/v1/datasets/WIKI/'
-		jsonURL=baseURL + stockcode + '.json'
+		periodURL={'1M':'?trim_start=' + (datetime.datetime.now() - datetime.timedelta(days=30)).strftime('%Y-%m-%d'), 
+			'6M':'?trim_start=' + (datetime.datetime.now() - datetime.timedelta(days=183)).strftime('%Y-%m-%d'), 
+			'1Y':'?trim_start=' + (datetime.datetime.now() - datetime.timedelta(days=365)).strftime('%Y-%m-%d'), 
+			'All':'', 
+			'None':''}
+		jsonURL=baseURL + stockcode + '.json' + periodURL[stockperiod]
 		jsonRespond = requests.get(jsonURL)
 		HTTPstatusCode=jsonRespond.status_code
 		
-		print '[URL]  ' + jsonURL
-		print '[HTTP] ' + str(HTTPstatusCode)
+		print '[URL]      ' + jsonURL
+		print '[HTTP]     ' + str(HTTPstatusCode)
+		print '[Stockcode]' + stockcode
+		print '[Period]   ' + stockperiod		
 		
 		#parse data if HTTP Status is OK
 		if HTTPstatusCode==200:
@@ -51,14 +61,11 @@ def stock():
 			#To check the up/down of the day to determin the bar color
 			inc = stockdata.Close > stockdata.Open
 			dec = stockdata.Open > stockdata.Close
-			
+		
 			w = 12*60*60*1000 # half day in ms
 
 			#Render Chart
-			# Create a polynomial line graph
-			x = list(range(5, 20))
-			fig = figure(title="Chart for " + stockcode, plot_width=1000, x_axis_type="datetime")
-			#fig.line(x, [i ** 2 for i in x], line_width=2)
+			fig = figure(title=None, plot_width=600, plot_height=480,x_axis_type="datetime", toolbar_location="below", tools = "crosshair, pan,wheel_zoom,box_zoom,reset,resize")
 			
 			fig.segment(stockdata.Date, stockdata.High, stockdata.Date, stockdata.Low, color="black")
 			fig.rect(stockdata.Date[inc], mids[inc], w, spans[inc], fill_color="#D5E1DD", line_color="black")
@@ -73,11 +80,11 @@ def stock():
 
 			script, div = components(fig, INLINE)			
 
-			html=render_template('stock.html', status={'code':1, 'msg':'OK'}, stock={'code':stockcode}, plot={'script':script, 'div':div, 'resources':plot_resources})
+			html=render_template('stock.html', status={'code':1, 'msg':'OK'}, stock={'code':stockcode, 'period':stockperiod}, plot={'script':script, 'div':div, 'resources':plot_resources})
 		else:
-			html=render_template('stock.html', status={'code':2, 'msg':'Server Error'})
+			html=render_template('stock.html', status={'code':2, 'msg':'Server Error'}, stock={'code':stockcode, 'period':stockperiod})
 	else:
-		html=render_template('stock.html', status={'code':3, 'msg':'No Stockcode Entered'})
+		html=render_template('stock.html', status={'code':3, 'msg':'Please Enter a Stockcode'}, stock={'code':'None', 'period':'None'})
 
 	return html 
   
